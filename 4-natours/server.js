@@ -1,4 +1,31 @@
+const mongoose = require('mongoose');
 const app = require('./app');
+
+// if (process.env.DATABASE === 'mongodb://localhost:27017/express') {
+//   console.log(process.env.DATABASE);
+// }
+if (process.env.NODE_ENV === 'development') {
+  console.log('hello');
+}
+
+const DB = process.env.DATABASE.replace(
+  '<PASSWORD>',
+  process.env.DATABASE_PASSWORD
+);
+
+mongoose
+  .connect(DB, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: false
+    // useUnifiedTopology: true
+  })
+  .then(() => {
+    console.log('DB connection succesful!');
+  })
+  .catch(err => {
+    console.log(`"ERROR:"`, err);
+  });
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
