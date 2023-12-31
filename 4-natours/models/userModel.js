@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const validator = require('validator');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -28,8 +30,27 @@ const userSchema = new mongoose.Schema({
   },
   passwordConfirm: {
     type: String,
-    required: [true, 'Please confirm your password']
+    required: [true, 'Please confirm your password'],
+    //only runs on 'save' or 'create'
+    validate: {
+      validator: function(el) {
+        return el === this.password;
+      }
+    }
   }
+});
+
+//encrpting password using mongo document middleware in-between recieving and persisting into db
+userSchema.pre('save', async function(next) {
+  //encrpyt only when pass modified
+  if (!this.isModified('password')) return next();
+
+  //hash the password with cost of 12 (higher the cost higher CPU required)
+  this.password = await bcrypt.hash(this.password, 12);
+
+  //set pass conf to undefined; it isnt need in the db
+  this.passwordConfirm = undefined;
+  next();
 });
 
 const User = mongoose.model('User', userSchema);
